@@ -1,16 +1,36 @@
-import streamlit as st
+import os
 from PIL import Image
-import diagnosis
-import joblib
+import streamlit as st
 
-def load_model():
-    return joblib.load('C:/Users/Campin Waladsae A/Downloads/cp05-main/Covid19-dataset')
-st.title('Immune Deficiency Classifier')
+def find_dataset(directory_name):
+    for root, dirs, files in os.walk("."):
+        if directory_name in dirs:
+            return os.path.join(root, directory_name)
+    return None
 
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png", "gif"])
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, width=300)
-    st.write("Diagnosis:", diagnosis.diagnosis(uploaded_file))
+def load_image(file_path):
+    with open(file_path, 'rb') as file:
+        image = Image.open(file)
+        return image
+
+dataset_directory = find_dataset("Covid19-dataset")
+
+if dataset_directory is not None:
+    st.write("Dataset directory found.")
+
+    def load_images(directory_path):
+        images = []
+        for root, dirs, files in os.walk(directory_path):
+            for file in files:
+                if file.endswith(".jpg") or file.endswith(".png") or file.endswith(".jpeg"):
+                    file_path = os.path.join(root, file)
+                    image = load_image(file_path)
+                    images.append(image)
+        return images
+
+    images = load_images(dataset_directory)
+
+    for i, image in enumerate(images):
+        st.image(image, caption=f"Image {i + 1}", use_column_width=True)
 else:
-    st.write("Please upload an image.")
+    st.write("Dataset directory not found.")
